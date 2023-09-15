@@ -1,60 +1,20 @@
 #!/usr/bin/env python3
 """
 ================================================================================
- Written by Robert Caddy.  Created on %(date)s
+ Written by Robert Caddy.
 
- Description (in paragraph form)
-
- Dependencies:
-     numpy
-     timeit
-     donemusic
-     matplotlib
-
- Changelog:
-     Version 1.0 - First Version
+ Generates the linear wave convergence plots. This script it largely identical
+ to the same script in the `analysis_scripts` repo, just optimized for this paper
 ================================================================================
 """
 
 from timeit import default_timer
-
-import collections
-import functools
-
-import matplotlib
-import matplotlib.animation as animation
 import matplotlib.pyplot as plt
-
 import numpy as np
-import h5py
-
-import os
-import sys
 import argparse
 import pathlib
 
-matplotlib.use("Agg")
-plt.style.use('dark_background')
-
-background_color = '0.1'
-plt.rcParams['axes.facecolor']    = background_color
-plt.rcParams['figure.facecolor']  = background_color
-plt.rcParams['patch.facecolor']   = background_color
-plt.rcParams['savefig.facecolor'] = background_color
-
-matplotlib.rcParams['font.sans-serif'] = "Helvetica"
-matplotlib.rcParams['font.family'] = "sans-serif"
-matplotlib.rcParams['mathtext.fontset'] = 'cm'
-matplotlib.rcParams['mathtext.rm'] = 'serif'
-
-plt.rcParams['axes.labelsize']   = 18.0
-plt.rcParams['axes.titlesize']   = 20.0
-plt.rcParams['figure.titlesize'] = 35.0
-
-# matplotlib.rcParams.update({"axes.grid" : True, "grid.color": "black"})
-
-# IPython_default = plt.rcParams.copy()
-# print(IPython_default)
+import shared_tools
 
 plt.close('all')
 
@@ -77,8 +37,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', '--in_path', help='The path to the directory that the source files are located in. Defaults to "~/Code/cholla/bin"')
     parser.add_argument('-o', '--out_path', help='The path of the directory to write the plots out to. Defaults to writing in the same directory as the input files')
-    parser.add_argument('-r', '--run_cholla', default=False, help='Runs cholla to generate all the scaling data')
-    parser.add_argument('-f', '--figure', default=False, help='Plot the L2 Norms')
+    parser.add_argument('-r', '--run_cholla', action="store_true", help='Runs cholla to generate all the data')
+    parser.add_argument('-f', '--figure', action="store_true", help='Generate the plots')
 
 
     args = parser.parse_args()
@@ -86,45 +46,36 @@ def main():
     if args.in_path:
         rootPath = pathlib.Path(str(args.in_path))
     else:
-        rootPath = pathlib.Path.home() / 'Code' / 'cholla' / 'bin'
+        rootPath = pathlib.Path(__file__).resolve().parent.parent
 
     if args.out_path:
         OutPath = pathlib.Path(str(args.out_path))
     else:
-        OutPath = rootPath
+        OutPath = pathlib.Path(__file__).resolve().parent.parent / 'assets' / '3-mhd-tests'
 
-    if args.run_cholla == 'True':
-        runCholla(rootPath)
+    if args.run_cholla:
+        runCholla()
 
-    if args.figure == 'True':
+    if args.figure:
         L2Norms = computeL2Norm(rootPath)
         plotL2Norm(L2Norms, OutPath)
-        plotL2Norm(L2Norms, OutPath, True)
+        shared_tools.update_plot_entry('linear_wave_convergence', 'python/linear-wave-convergence.py')
+
 # ==============================================================================
 
 # ==============================================================================
-def runCholla(rootPath):
-    # Basic Settings
-    offAxisResolution = 'ny=16 nz=16'
-
+def runCholla():
     # Loop over the lists and run cholla for each combination
     for reconstructor in reconstructors:
         for wave in waves:
             for resolution in resolutions:
-                # Generate Cholla run command
-                chollaPath = rootPath / f'cholla.mhd.c3po.{reconstructor}'
-                paramFilePath = rootPath / f'{wave}.txt'
-                logFile = rootPath / 'cholla.log'
-                command = f'{chollaPath} {paramFilePath} nx={resolution} {offAxisResolution} >> {logFile} 2>&1'
-
-                # Run Cholla
-                os.system(command)
-
-                # Move data files
-                initialFile = rootPath / '0.h5.0'
-                finalFile = rootPath / '1.h5.0'
-                initialFile.rename(rootPath / 'data' / f'{reconstructor}_{wave}_{resolution}_initial.h5')
-                finalFile.rename(rootPath / 'data' / f'{reconstructor}_{wave}_{resolution}_final.h5')
+                shared_tools.cholla_runner(reconstructor=reconstructor,
+                                           param_file_name=f'{wave}.txt',
+                                           cholla_cli_args=f'nx={resolution} ny=16 nz=16',
+                                           move_initial=True,
+                                           move_final=True,
+                                           initial_filename=f'{reconstructor}_{wave}_{resolution}_initial',
+                                           final_filename=f'{reconstructor}_{wave}_{resolution}_final')
 
                 # Print status
                 print(f'Finished with {resolution}, {wave}, {reconstructor}')
@@ -133,64 +84,60 @@ def runCholla(rootPath):
 # ==============================================================================
 def computeL2Norm(rootPath):
     # Setup dictionary to hold data
-    data = {}
+    l2_data = {}
     for reconstructor in reconstructors:
         for wave in waves:
             for resolution in resolutions:
-                data[f'{reconstructor}_{wave}'] = []
+                l2_data[f'{reconstructor}_{wave}'] = []
 
-    # Loop over the lists and compute the L2 norm for each combination
+    # Setup dictionary to hold data
     for reconstructor in reconstructors:
         for wave in waves:
             for resolution in resolutions:
                 # Determine file paths and load the files
-                initialFilePath = rootPath / 'data' / f'{reconstructor}_{wave}_{resolution}_initial.h5'
-                finalFilePath   = rootPath / 'data' / f'{reconstructor}_{wave}_{resolution}_final.h5'
-                initialFile = h5py.File(initialFilePath, 'r')
-                finalFile   = h5py.File(finalFilePath, 'r')
+                initial_data = shared_tools.load_conserved_data(f'{reconstructor}_{wave}_{resolution}_initial')
+                final_data   = shared_tools.load_conserved_data(f'{reconstructor}_{wave}_{resolution}_final')
 
                 # Get a list of all the data sets
-                fields = initialFile.keys()
+                fields = initial_data.keys()
 
                 # Compute the L2 Norm
                 L2Norm = 0.0
                 for field in fields:
-                    initialData = np.array(initialFile[field])
-                    finalData   = np.array(finalFile[field])
-
-                    diff = np.abs(initialData - finalData)
-                    L1Error = np.sum(diff) / initialData.size
+                    diff = np.abs(initial_data[field] - final_data[field])
+                    L1Error = np.sum(diff) / (initial_data[field]).size
                     L2Norm += np.power(L1Error, 2)
 
                 L2Norm = np.sqrt(L2Norm)
-                data[f'{reconstructor}_{wave}'].append(L2Norm)
+                l2_data[f'{reconstructor}_{wave}'].append(L2Norm)
 
-    return data
+    return l2_data
 # ==============================================================================
 
 # ==============================================================================
 def plotL2Norm(L2Norms, outPath, normalize = False):
-    # Pretty names
-    pretty_names = {'alfven_wave':r'Alfven Wave',
-                    'fast_magnetosonic':'Fast Magnetosonic Wave',
-                    'mhd_contact_wave':'Entropy Wave',
-                    'slow_magnetosonic':'Slow Magnetosonic Wave'}
-
     # Plotting info
-    data_linestyle  = '-'
-    linewidth  = 1
-    data_marker     = '.'
-    data_markersize = 10
-    scaling_linestyle = '--'
-    alpha = 0.6
-    scaling_color = 'white'
-    annotate_font_size = 13
+    data_linestyle     = '-'
+    linewidth          = 1
+    plmc_marker        = '.'
+    ppmc_marker        = '^'
+    data_markersize    = 10
+    scaling_linestyle  = '--'
+    alpha              = 0.6
+    scaling_color      = 'black'
+    suptitle_font_size = 15
+    subtitle_font_size = 10
+    axslabel_font_size = 10
+    legend_font_size   = 7.5
+    tick_font_size     = 7.5
 
     # Plot the L2 Norm data
-    for wave in waves:
-        plt.figure()
-        ax  = plt.gca()
+    fig, subPlot = plt.subplots(2, 2)#, sharex=True, sharey=True)
 
+    wave_position = {'alfven_wave':(1,0), 'fast_magnetosonic':(0,1), 'mhd_contact_wave':(1,1), 'slow_magnetosonic':(0,0)}
+
+    for wave in waves:
+        subplot_idx = wave_position[wave]
         # Optionally, normalize the data
         if normalize:
             plmc_data = L2Norms[f'plmc_{wave}'] / L2Norms[f'plmc_{wave}'][0]
@@ -202,38 +149,58 @@ def plotL2Norm(L2Norms, outPath, normalize = False):
             norm_name = ''
 
         # Plot raw data
-        plt.plot(resolutions, plmc_data, color='#8dd3c7', linestyle=data_linestyle, linewidth=linewidth, marker=data_marker, markersize=data_markersize, label='PLMC')
-        plt.plot(resolutions, ppmc_data, color='#feffb3', linestyle=data_linestyle, linewidth=linewidth, marker=data_marker, markersize=data_markersize, label='PPMC')
+        subPlot[subplot_idx].plot(resolutions,
+                                  plmc_data,
+                                  color      = shared_tools.colors['plmc'],
+                                  linestyle  = data_linestyle,
+                                  linewidth  = linewidth,
+                                  marker     = plmc_marker,
+                                  markersize = data_markersize,
+                                  label      = 'PLMC')
+        subPlot[subplot_idx].plot(resolutions,
+                                  ppmc_data,
+                                  color      = shared_tools.colors['ppmc'],
+                                  linestyle  = data_linestyle,
+                                  linewidth  = linewidth,
+                                  marker     = ppmc_marker,
+                                  markersize = 0.5*data_markersize,
+                                  label      = 'PPMC')
 
         # Plot the scaling lines
         scalingRes = [resolutions[0], resolutions[1], resolutions[-1]]
         # loop through the different scaling powers
         for i in [2]:
+            label = r'$\mathcal{O}(\Delta x^' + str(i) + r')$'
             norm_point = plmc_data[1]
             scaling_data = np.array([norm_point / np.power(scalingRes[0]/scalingRes[1], i), norm_point, norm_point / np.power(scalingRes[-1]/scalingRes[1], i)])
-            plt.plot(scalingRes, scaling_data, color=scaling_color, alpha=alpha, linestyle=scaling_linestyle, linewidth=linewidth)
-            label = r'$\mathcal{O}(\Delta x^' + str(i) + r')$'
-            plt.annotate(label, xy=(scalingRes[-1], scaling_data[-1]), fontsize=annotate_font_size, textcoords='offset points', xytext=(2, -8))
+            subPlot[subplot_idx].plot(scalingRes, scaling_data, color=scaling_color, alpha=alpha, linestyle=scaling_linestyle, linewidth=linewidth, label=label)
 
         # Set axis parameters
-        plt.xscale('log')
-        plt.yscale('log')
-        plt.xlim(1E1, 1E3)
+        subPlot[subplot_idx].set_xscale('log')
+        subPlot[subplot_idx].set_yscale('log')
+        subPlot[subplot_idx].set_xlim(1E1, 1E3)
 
-        # Legend
-        plt.legend()
+        # Set ticks and grid
+        subPlot[subplot_idx].tick_params(axis='both', direction='in', which='both', labelsize=tick_font_size, bottom=True, top=True, left=True, right=True)
 
-        # Set ticks
-        ax.tick_params(axis='both', direction='in', which='both', labelsize=annotate_font_size, bottom=True, top=True, left=True, right=True)
+        # Set axis titles
+        if (subplot_idx[0] == 1):
+            subPlot[subplot_idx].set_xlabel('Resolution', fontsize=axslabel_font_size)
+        if (subplot_idx[1] == 0):
+            subPlot[subplot_idx].set_ylabel(f'{norm_name}L2 Error', fontsize=axslabel_font_size)
+        subPlot[subplot_idx].set_title(f'{shared_tools.pretty_names[wave]}', fontsize=subtitle_font_size)
 
-        # Set labels
-        plt.title(f'{norm_name}MHD Linear Wave Convergence\n({pretty_names[wave]})')
-        plt.xlabel('Resolution')
-        plt.ylabel(f'{norm_name}L2 Error')
+        subPlot[subplot_idx].legend(fontsize=legend_font_size)
 
-        plt.tight_layout()
-        plt.savefig(outPath / f'{wave}_linear_convergence{norm_name}.pdf')
-        plt.close()
+    # Legend
+    # fig.legend()
+
+    # Whole plot settings
+    fig.suptitle(f'{norm_name}MHD Linear Wave Convergence', fontsize=suptitle_font_size)
+
+    plt.tight_layout()
+    plt.savefig(outPath / f'linear_convergence.pdf', transparent = True)
+    plt.close()
 # ==============================================================================
 
 
