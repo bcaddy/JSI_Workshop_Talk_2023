@@ -1,6 +1,7 @@
 # Files specific to this repo #
 ##############################
 *.key
+*h5*
 
 # Compiled source #
 ###################

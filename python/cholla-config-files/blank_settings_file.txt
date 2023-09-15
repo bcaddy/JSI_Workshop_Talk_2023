@@ -1,0 +1,3 @@
+# This is blank file for cholla runs that are setting all the parameters
+# on the command to point at. Without a blank file cholla will crash
+
