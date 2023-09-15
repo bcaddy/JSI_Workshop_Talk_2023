@@ -1,0 +1,3 @@
+[submodule "cholla"]
+	path = cholla
+	url = git@github.com:cholla-hydro/cholla.git
