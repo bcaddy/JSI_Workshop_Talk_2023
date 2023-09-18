@@ -1,3 +1,6 @@
 [submodule "cholla"]
 	path = cholla
 	url = git@github.com:cholla-hydro/cholla.git
+[submodule "scaling-tests"]
+	path = scaling-tests
+	url = https://github.com/bcaddy/scaling-tests.git
