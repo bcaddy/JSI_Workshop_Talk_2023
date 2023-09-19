@@ -51,7 +51,7 @@ def main():
     if args.out_path:
         OutPath = pathlib.Path(str(args.out_path))
     else:
-        OutPath = pathlib.Path(__file__).resolve().parent.parent / 'assets' / '3-mhd-tests'
+        OutPath = pathlib.Path(__file__).resolve().parent.parent / 'assets'
 
     if args.run_cholla:
         runCholla()
@@ -59,7 +59,6 @@ def main():
     if args.figure:
         L2Norms = computeL2Norm(rootPath)
         plotL2Norm(L2Norms, OutPath)
-        shared_tools.update_plot_entry('linear_wave_convergence', 'python/linear-wave-convergence.py')
 
 # ==============================================================================
 
