@@ -10,11 +10,26 @@
 
 from timeit import default_timer
 import matplotlib.pyplot as plt
+import matplotlib
 import numpy as np
 import argparse
 import pathlib
 
 import shared_tools
+
+matplotlib.use("Agg")
+plt.style.use('dark_background')
+
+axes_color = '0.1'
+# plt.rcParams['axes.facecolor']    = axes_color
+# plt.rcParams['figure.facecolor']  = background_color
+# plt.rcParams['patch.facecolor']   = background_color
+# plt.rcParams['savefig.facecolor'] = background_color
+
+matplotlib.rcParams['font.sans-serif'] = "Helvetica"
+matplotlib.rcParams['font.family'] = "sans-serif"
+matplotlib.rcParams['mathtext.fontset'] = 'cm'
+matplotlib.rcParams['mathtext.rm'] = 'serif'
 
 plt.close('all')
 
@@ -123,20 +138,13 @@ def plotL2Norm(L2Norms, outPath, normalize = False):
     data_markersize    = 10
     scaling_linestyle  = '--'
     alpha              = 0.6
-    scaling_color      = 'black'
-    suptitle_font_size = 15
-    subtitle_font_size = 10
-    axslabel_font_size = 10
-    legend_font_size   = 7.5
-    tick_font_size     = 7.5
-
-    # Plot the L2 Norm data
-    fig, subPlot = plt.subplots(2, 2)#, sharex=True, sharey=True)
-
-    wave_position = {'alfven_wave':(1,0), 'fast_magnetosonic':(0,1), 'mhd_contact_wave':(1,1), 'slow_magnetosonic':(0,0)}
+    scaling_color      = 'grey'
+    title_font_size    = 30
+    axslabel_font_size = 25
+    legend_font_size   = 15
+    tick_font_size     = 15
 
     for wave in waves:
-        subplot_idx = wave_position[wave]
         # Optionally, normalize the data
         if normalize:
             plmc_data = L2Norms[f'plmc_{wave}'] / L2Norms[f'plmc_{wave}'][0]
@@ -148,7 +156,7 @@ def plotL2Norm(L2Norms, outPath, normalize = False):
             norm_name = ''
 
         # Plot raw data
-        subPlot[subplot_idx].plot(resolutions,
+        plt.plot(resolutions,
                                   plmc_data,
                                   color      = shared_tools.colors['plmc'],
                                   linestyle  = data_linestyle,
@@ -156,7 +164,7 @@ def plotL2Norm(L2Norms, outPath, normalize = False):
                                   marker     = plmc_marker,
                                   markersize = data_markersize,
                                   label      = 'PLMC')
-        subPlot[subplot_idx].plot(resolutions,
+        plt.plot(resolutions,
                                   ppmc_data,
                                   color      = shared_tools.colors['ppmc'],
                                   linestyle  = data_linestyle,
@@ -172,34 +180,27 @@ def plotL2Norm(L2Norms, outPath, normalize = False):
             label = r'$\mathcal{O}(\Delta x^' + str(i) + r')$'
             norm_point = plmc_data[1]
             scaling_data = np.array([norm_point / np.power(scalingRes[0]/scalingRes[1], i), norm_point, norm_point / np.power(scalingRes[-1]/scalingRes[1], i)])
-            subPlot[subplot_idx].plot(scalingRes, scaling_data, color=scaling_color, alpha=alpha, linestyle=scaling_linestyle, linewidth=linewidth, label=label)
+            plt.plot(scalingRes, scaling_data, color=scaling_color, alpha=alpha, linestyle=scaling_linestyle, linewidth=linewidth, label=label)
 
         # Set axis parameters
-        subPlot[subplot_idx].set_xscale('log')
-        subPlot[subplot_idx].set_yscale('log')
-        subPlot[subplot_idx].set_xlim(1E1, 1E3)
+        plt.xscale('log')
+        plt.yscale('log')
+        plt.xlim(1E1, 1E3)
 
         # Set ticks and grid
-        subPlot[subplot_idx].tick_params(axis='both', direction='in', which='both', labelsize=tick_font_size, bottom=True, top=True, left=True, right=True)
+        plt.tick_params(axis='both', direction='in', which='both', labelsize=tick_font_size, bottom=True, top=True, left=True, right=True)
 
         # Set axis titles
-        if (subplot_idx[0] == 1):
-            subPlot[subplot_idx].set_xlabel('Resolution', fontsize=axslabel_font_size)
-        if (subplot_idx[1] == 0):
-            subPlot[subplot_idx].set_ylabel(f'{norm_name}L2 Error', fontsize=axslabel_font_size)
-        subPlot[subplot_idx].set_title(f'{shared_tools.pretty_names[wave]}', fontsize=subtitle_font_size)
+        plt.xlabel('Resolution', fontsize=axslabel_font_size)
+        plt.ylabel(f'{norm_name}L2 Error', fontsize=axslabel_font_size)
+        plt.title(f'{shared_tools.pretty_names[wave]}', fontsize=title_font_size)
 
-        subPlot[subplot_idx].legend(fontsize=legend_font_size)
+        plt.legend(fontsize=legend_font_size)
+        plt.grid(color='0.25')
 
-    # Legend
-    # fig.legend()
-
-    # Whole plot settings
-    fig.suptitle(f'{norm_name}MHD Linear Wave Convergence', fontsize=suptitle_font_size)
-
-    plt.tight_layout()
-    plt.savefig(outPath / f'linear_convergence.pdf', transparent = True)
-    plt.close()
+        plt.tight_layout()
+        plt.savefig(outPath / f'linear_convergence_{wave}.pdf')
+        plt.close()
 # ==============================================================================
 
 

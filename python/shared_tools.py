@@ -60,7 +60,7 @@ pretty_names = {'density':'Density',
 colors = {'density':'blue', 'gas_pressure':'green', 'energy':'red',
           'velocity_x':'purple', 'velocity_y':'purple', 'velocity_z':'purple',
           'magnetic_x':'orange', 'magnetic_y':'orange', 'magnetic_z':'orange',
-          'plmc':'red', 'ppmc':'blue'}
+          'plmc':'purple', 'ppmc':'blue'}
 
 
 # ==============================================================================
