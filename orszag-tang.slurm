@@ -14,4 +14,4 @@ cd $job_root
 
 source ./cholla/builds/setup.frontier.cce.sh
 
-srun --nodes=$SLURM_JOB_NUM_NODES --ntasks=$((SLURM_JOB_NUM_NODES*8)) --cpus-per-task=7 --gpus-per-task=1 --gpu-bind=closest ./cholla/bin/cholla.mhd.frontier ./orszag_tang_vortex.txt outdir="${job_root}/data/otv_small_scale/"
+srun --nodes=$SLURM_JOB_NUM_NODES --ntasks=$((SLURM_JOB_NUM_NODES*8)) --cpus-per-task=7 --gpus-per-task=1 --gpu-bind=closest ${job_root}/cholla/bin/cholla.mhd.frontier ${job_root}/orszag_tang_vortex.txt outdir="${job_root}/data/otv_small_scale/"
