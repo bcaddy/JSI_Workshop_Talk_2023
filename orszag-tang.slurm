@@ -3,9 +3,9 @@
 #SBATCH -A csc380
 #SBATCH -J Orszag_tang_small_scale
 #SBATCH -o /ccs/home/rcaddy/ast181-orion/scratch/rcaddy/JSI_Workshop_Talk_2023/data/otv_small_scale/%x-%j.out
-#SBATCH -t 01:00:00
+#SBATCH -t 04:00:00
 #SBATCH -p batch
-#SBATCH -N 8
+#SBATCH -N 2
 #SBATCH --mail-user=r.caddy@pitt.edu
 #SBATCH --mail-type=ALL
 
