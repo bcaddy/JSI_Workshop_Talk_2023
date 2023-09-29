@@ -128,3 +128,37 @@ for n in range(ns, ne+1):
     fileout.create_dataset('scalar_yz', data=scalar_yz)
 
   fileout.close()
+
+
+# ==============================================================================
+def concat_slice():
+  '''
+  to-do
+  1. open input file
+  2. open output file
+  3. write header to output file
+  4. loop over inputs to copy data
+      - note that I'll need to loop one field at a time to avoid running out of memory. Doing that I should be able to run 2 processes per node
+
+  Input
+  - Directory with source files
+  - Number of ranks used
+  - timestep number to concatenate
+  - destination path and name
+  - True/False for xy, yz, zx slices
+  - Fields to skip
+  - data type to save as
+  - Compression?
+  '''
+
+# ==============================================================================
+
+# ==============================================================================
+def copy_header():
+  '''
+  Skip `dims_local`, `offset`
+  '''
+  # for attr in source_file.attrs.keys():
+  #   destination_file.attrs[attr] = source_file.attrs[attr]
+  pass
+# ==============================================================================
