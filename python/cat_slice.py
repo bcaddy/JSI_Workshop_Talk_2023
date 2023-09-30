@@ -17,6 +17,7 @@ import cat_slice
 import h5py
 import argparse
 import pathlib
+import numpy as np
 
 # ==============================================================================
 def main():
@@ -63,7 +64,7 @@ def concat_slice(source_directory: pathlib.Path,
                  concat_yz: bool = True,
                  concat_xz: bool = True,
                  skip_fields: list = [],
-                 destination_dtype: str = None,
+                 destination_dtype: np.dtype = None,
                  compression_type: str = None,
                  compression_options: str = None):
   """Concatenate slice HDF5 Cholla datasets. i.e. take the single files
@@ -80,7 +81,7 @@ def concat_slice(source_directory: pathlib.Path,
       concat_yz (bool, optional): If True then concatenate the YZ slice. Defaults to True.
       concat_xz (bool, optional): If True then concatenate the XZ slice. Defaults to True.
       skip_fields (list, optional): List of fields to skip concatenating. Defaults to [].
-      destination_dtype (str, optional): The data type of the output datasets. Accepts most numpy types. Defaults to the same as the input datasets.
+      destination_dtype (np.dtype, optional): The data type of the output datasets. Accepts most numpy types. Defaults to the same as the input datasets.
       compression_type (str, optional): What kind of compression to use on the output data. Defaults to None.
       compression_options (str, optional): What compression settings to use if compressing. Defaults to None.
   """
