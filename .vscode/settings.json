@@ -3,6 +3,9 @@
         "axslabel",
         "bcnd",
         "diaph",
+        "dset",
+        "DSLICES",
+        "filein",
         "reconstructor"
     ]
 }

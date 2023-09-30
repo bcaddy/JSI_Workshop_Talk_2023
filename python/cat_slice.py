@@ -30,8 +30,24 @@ def concat_slice(source_directory: pathlib.Path,
                  destination_dtype: str = None,
                  compression_type: str = None,
                  compression_options: str = None):
-  '''
-  '''
+  """Concatenate slice HDF5 Cholla datasets. i.e. take the single files
+  generated per process and concatenate them into a single, large file. This
+  function concatenates a single output time and can be called multiple times,
+  potentially in parallel, to concatenate multiple output times.
+
+  Args:
+      source_directory (pathlib.Path): The directory containing the unconcatenated files
+      destination_file_path (pathlib.Path): The path and name of the new concatenated file
+      num_ranks (int): The number of ranks that Cholla was run with
+      timestep_number (int): The timestep number/output to concatenate
+      concat_xy (bool, optional): If True then concatenate the XY slice. Defaults to True.
+      concat_yz (bool, optional): If True then concatenate the YZ slice. Defaults to True.
+      concat_xz (bool, optional): If True then concatenate the XZ slice. Defaults to True.
+      skip_fields (list, optional): List of fields to skip concatenating. Defaults to [].
+      destination_dtype (str, optional): The data type of the output datasets. Accepts most numpy types. Defaults to the same as the input datasets.
+      compression_type (str, optional): What kind of compression to use on the output data. Defaults to None.
+      compression_options (str, optional): What compression settings to use if compressing. Defaults to None.
+  """
   # Open destination file and first file for getting metadata
   source_file = h5py.File(source_directory / f'{timestep_number}_slice.h5.0', 'r')
   destination_file = h5py.File(destination_file_path, 'w')
@@ -88,6 +104,15 @@ def concat_slice(source_directory: pathlib.Path,
 
 # ==============================================================================
 def copy_header(source_file: h5py.File, destination_file: h5py.File):
+  """Copy the attributes of one HDF5 file to another, skipping all fields that are specific to an individual rank
+
+  Args:
+      source_file (h5py.File): The source file
+      destination_file (h5py.File): The destination file
+
+  Returns:
+      h5py.File: The destination file with the new header attributes
+  """
   fields_to_skip = ['dims_local', 'offset']
 
   for attr_key in source_file.attrs.keys():
@@ -99,6 +124,18 @@ def copy_header(source_file: h5py.File, destination_file: h5py.File):
 
 # ==============================================================================
 def get_slice_shape(source_file: h5py.File, dataset: str):
+  """Determine the shape of the full slice in a dataset
+
+  Args:
+      source_file (h5py.File): The source file the get the shape information from
+      dataset (str): The dataset to get the shape of
+
+  Raises:
+      ValueError: If the dataset name isn't a slice name
+
+  Returns:
+      tuple: The 2D dimensions of the slice
+  """
   nx, ny, nz = source_file.attrs['dims']
 
   if 'xy' in dataset:
@@ -115,6 +152,18 @@ def get_slice_shape(source_file: h5py.File, dataset: str):
 
 # ==============================================================================
 def write_bounds(source_file: h5py.File, dataset: str):
+  """Determine the bounds of the concatenated file to write to
+
+  Args:
+      source_file (h5py.File): The source file to read from
+      dataset (str): The name of the dataset to read from the source file
+
+  Raises:
+      ValueError: If the dataset name isn't a slice name
+
+  Returns:
+      tuple: The write bounds for the concatenated file to be used like `output_file[dataset][return[0]:return[1], return[2]:return[3]]
+  """
   nx_local, ny_local, nz_local = source_file.attrs['dims_local']
   x_start, y_start, z_start    = source_file.attrs['offset']
 
