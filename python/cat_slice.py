@@ -51,7 +51,7 @@ def main():
                skip_fields=args.skip_fields,
                destination_dtype=args.dtype,
                compression_type=args.compression_type,
-               compression_type=args.compression_opts)
+               compression_options=args.compression_opts)
 # ==============================================================================
 
 # ==============================================================================
