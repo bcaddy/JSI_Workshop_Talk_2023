@@ -6,6 +6,9 @@
         "dset",
         "DSLICES",
         "filein",
-        "reconstructor"
+        "reconstructor",
+        "setsar",
+        "vmax",
+        "vmin"
     ]
 }

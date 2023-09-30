@@ -21,9 +21,6 @@ import numpy as np
 # Repo Root Path
 repo_root = pathlib.Path(__file__).resolve().parent.parent
 
-# The path to the pickled dictionary
-pickle_filepath = repo_root / 'python' / 'links.pkl'
-
 # Path to data files
 data_files_path = repo_root / 'data'
 

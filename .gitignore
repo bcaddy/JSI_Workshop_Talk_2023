@@ -3,6 +3,7 @@
 *.key
 *h5*
 data/*
+dask-task-graph.pdf
 
 # Compiled source #
 ###################
