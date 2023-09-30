@@ -19,6 +19,42 @@ import argparse
 import pathlib
 
 # ==============================================================================
+def main():
+  """This function handles the CLI argument parsing and is only intended to be used when this script is invoked from the
+  command line. If you're importing this file then use the `concat_slice` function directly.
+  """
+  # Argument handling
+  cli = argparse.ArgumentParser()
+  # Required Arguments
+  cli.add_argument('-s', '--source-directory', type=pathlib.Path, required=True, help='The path to the source HDF5 files.')
+  cli.add_argument('-o', '--output-file',      type=pathlib.Path, required=True, help='The path and filename of the concatenated file.')
+  cli.add_argument('-n', '--num-processes',    type=int,          required=True, help='The number of processes that were used to generate the slices.')
+  cli.add_argument('-t', '--timestep-num',     type=int,          required=True, help='The timestep number to be concatenated')
+  # Optional Arguments
+  cli.add_argument('--xy',               type=bool, default=True, help='If True then concatenate the XY slice. Defaults to True.')
+  cli.add_argument('--yz',               type=bool, default=True, help='If True then concatenate the YZ slice. Defaults to True.')
+  cli.add_argument('--xz',               type=bool, default=True, help='If True then concatenate the XZ slice. Defaults to True.')
+  cli.add_argument('--skip-fields',      type=list, default=[],   help='List of fields to skip concatenating. Defaults to empty.')
+  cli.add_argument('--dtype',            type=str,  default=None, help='The data type of the output datasets. Accepts most numpy types. Defaults to the same as the input datasets.')
+  cli.add_argument('--compression-type', type=str,  default=None, help='What kind of compression to use on the output data. Defaults to None.')
+  cli.add_argument('--compression-opts', type=str,  default=None, help='What compression settings to use if compressing. Defaults to None.')
+  args = cli.parse_args()
+
+  # Perform the concatenation
+  concat_slice(source_directory=args.source_directory,
+               destination_file_path=args.output_file,
+               num_ranks=args.num_processses,
+               timestep_number=args.timestep_num,
+               concat_xy=args.xy,
+               concat_yz=args.yz,
+               concat_xz=args.xz,
+               skip_fields=args.skip_fields,
+               destination_dtype=args.dtype,
+               compression_type=args.compression_type,
+               compression_type=args.compression_opts)
+# ==============================================================================
+
+# ==============================================================================
 def concat_slice(source_directory: pathlib.Path,
                  destination_file_path: pathlib.Path,
                  num_ranks: int,
@@ -181,7 +217,6 @@ def write_bounds(source_file: h5py.File, dataset: str):
 
 if __name__ == '__main__':
   from timeit import default_timer
-  rootPath = pathlib.Path.home() /'Downloads'/'small_otv_test_data'
   start = default_timer()
-  concat_slice(rootPath, rootPath/'outdir'/'output.h5', 16, 0)
+  main()
   print(f'\nTime to execute: {round(default_timer()-start,2)} seconds')
