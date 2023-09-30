@@ -31,13 +31,13 @@ matplotlib.rcParams['mathtext.fontset'] = 'cm'
 matplotlib.rcParams['mathtext.rm'] = 'serif'
 
 plt.rcParams['axes.labelsize']   = 15.0
-plt.rcParams['axes.titlesize']   = 18.0
+plt.rcParams['axes.titlesize']   = 35.0
 plt.rcParams['figure.titlesize'] = 35.0
 
-plt.rcParams['xtick.bottom'] = False
-plt.rcParams['xtick.labelbottom'] = False
-plt.rcParams['ytick.left'] = False
-plt.rcParams['ytick.labelleft'] = False
+# plt.rcParams['xtick.bottom'] = False
+# plt.rcParams['xtick.labelbottom'] = False
+# plt.rcParams['ytick.left'] = False
+# plt.rcParams['ytick.labelleft'] = False
 
 # matplotlib.rcParams.update({"axes.grid" : True, "grid.color": "black"})
 
@@ -80,6 +80,9 @@ def generate_figure(source_file_path, png_file_path, pdf_file_path, field, conto
         data = np.empty(data_file[field].shape)
         data_file[field].read_direct(data)
 
+    # Rotate the data to make it look like the standard plots
+    data = np.rot90(data)
+
     # Plotting
     plt.figure(figsize=(10,10))
 
@@ -101,7 +104,7 @@ def generate_figure(source_file_path, png_file_path, pdf_file_path, field, conto
         plt.gca().set_aspect('equal')
 
     # Plot Settings, Titles, etc
-    plt.title(f'Exascale Orszag-Tang Vortex {pretty_names[field]}')
+    plt.title(f'Exascale Orszag-Tang Vortex: {pretty_names[field]}')
     # plt.colorbar()
     # plt.xlabel(f'X-Direction Cells')
     # plt.ylabel(f'Y-Direction Cells')
