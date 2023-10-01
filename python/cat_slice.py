@@ -30,7 +30,7 @@ def main():
   cli.add_argument('-s', '--source-directory', type=pathlib.Path, required=True, help='The path to the source HDF5 files.')
   cli.add_argument('-o', '--output-file',      type=pathlib.Path, required=True, help='The path and filename of the concatenated file.')
   cli.add_argument('-n', '--num-processes',    type=int,          required=True, help='The number of processes that were used to generate the slices.')
-  cli.add_argument('-t', '--timestep-num',     type=int,          required=True, help='The timestep number to be concatenated')
+  cli.add_argument('-t', '--output-num',     type=int,          required=True, help='The output number to be concatenated')
   # Optional Arguments
   cli.add_argument('--xy',               type=bool, default=True, help='If True then concatenate the XY slice. Defaults to True.')
   cli.add_argument('--yz',               type=bool, default=True, help='If True then concatenate the YZ slice. Defaults to True.')
@@ -45,7 +45,7 @@ def main():
   concat_slice(source_directory=args.source_directory,
                destination_file_path=args.output_file,
                num_ranks=args.num_processses,
-               timestep_number=args.timestep_num,
+               output_number=args.output_num,
                concat_xy=args.xy,
                concat_yz=args.yz,
                concat_xz=args.xz,
@@ -59,7 +59,7 @@ def main():
 def concat_slice(source_directory: pathlib.Path,
                  destination_file_path: pathlib.Path,
                  num_ranks: int,
-                 timestep_number: int,
+                 output_number: int,
                  concat_xy: bool = True,
                  concat_yz: bool = True,
                  concat_xz: bool = True,
@@ -76,7 +76,7 @@ def concat_slice(source_directory: pathlib.Path,
       source_directory (pathlib.Path): The directory containing the unconcatenated files
       destination_file_path (pathlib.Path): The path and name of the new concatenated file
       num_ranks (int): The number of ranks that Cholla was run with
-      timestep_number (int): The timestep number/output to concatenate
+      output_number (int): The output number to concatenate
       concat_xy (bool, optional): If True then concatenate the XY slice. Defaults to True.
       concat_yz (bool, optional): If True then concatenate the YZ slice. Defaults to True.
       concat_xz (bool, optional): If True then concatenate the XZ slice. Defaults to True.
@@ -86,7 +86,7 @@ def concat_slice(source_directory: pathlib.Path,
       compression_options (str, optional): What compression settings to use if compressing. Defaults to None.
   """
   # Open destination file and first file for getting metadata
-  source_file = h5py.File(source_directory / f'{timestep_number}_slice.h5.0', 'r')
+  source_file = h5py.File(source_directory / f'{output_number}_slice.h5.0', 'r')
   destination_file = h5py.File(destination_file_path, 'w')
 
   # Copy over header
@@ -122,12 +122,12 @@ def concat_slice(source_directory: pathlib.Path,
   # Copy data
   for rank in range(num_ranks):
     # Open source file
-    source_file = h5py.File(source_directory / f'{timestep_number}_slice.h5.{rank}', 'r')
+    source_file = h5py.File(source_directory / f'{output_number}_slice.h5.{rank}', 'r')
 
     # Loop through and copy datasets
     for dataset in datasets_to_copy:
       # Determine locations and shifts for writing
-      i0_start, i0_end, i1_start, i1_end, file_in_slice = write_bounds(source_file, dataset)
+      (i0_start, i0_end, i1_start, i1_end), file_in_slice = write_bounds(source_file, dataset)
 
       if file_in_slice:
         # Copy the data
