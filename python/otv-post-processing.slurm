@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 #SBATCH -A csc380
-#SBATCH -J Orszag_tang_small_scale
-#SBATCH -o /lustre/orion/ast181/scratch/rcaddy/JSI_Workshop_Talk_2023/data/otv_small_scale/%x-%j.out
+#SBATCH -J Orszag_tang_small_scale_analysis
+#SBATCH -o /lustre/orion/ast181/scratch/rcaddy/JSI_Workshop_Talk_2023/data/otv_small_scale/%x-%j-analysis.out
 #SBATCH -t 04:00:00
 #SBATCH -p batch
 #SBATCH -N 30
