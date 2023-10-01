@@ -28,10 +28,10 @@ def main():
     cli = argparse.ArgumentParser()
     # Required Arguments
     cli.add_argument('-n', '--num-workers', type=int, default=6, help='The number of workers to use.')
+    # Optional Arguments
     cli.add_argument('--cat-files',  type=bool, default=False, help='Concatenate the data files.')
     cli.add_argument('--gen-images', type=bool, default=False, help='Generate the images.')
     cli.add_argument('--gen-video',  type=bool, default=False, help='Convert the images to videos.')
-    # Optional Arguments
     args = cli.parse_args()
 
     # Set scheduler type. Options are 'threads', 'processes', 'single-threaded', and 'distributed'.
