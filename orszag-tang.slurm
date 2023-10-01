@@ -14,4 +14,8 @@ cd $job_root
 
 source ./cholla/builds/setup.frontier.cce.sh
 
-srun --nodes=$SLURM_JOB_NUM_NODES --ntasks=196 --cpus-per-task=7 --gpus-per-task=1 --gpu-bind=closest ${job_root}/cholla/bin/cholla.mhd.frontier ${job_root}/orszag_tang_vortex.txt outdir="${job_root}/data/otv_full_scale/uncat_data/"
+# For restarting if needed
+# RESTART_ARGS=''
+RESTART_ARGS="init=Read_Grid nfile=250 indir=${job_root}/data/otv_full_scale/uncat_data/"
+
+srun --nodes=$SLURM_JOB_NUM_NODES --ntasks=196 --cpus-per-task=7 --gpus-per-task=1 --gpu-bind=closest ${job_root}/cholla/bin/cholla.mhd.frontier ${job_root}/orszag_tang_vortex.txt outdir="${job_root}/data/otv_full_scale/uncat_data/" $RESTART_ARGS
