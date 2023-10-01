@@ -10,9 +10,9 @@
 # running grids of 1377x1377x10.
 # N=5508 is for a 4x4=16gpu job, 2 nodes.
 # number of grid cells in the x dimension
-nx=5508
+nx=19278
 # number of grid cells in the y dimension
-ny=5508
+ny=19278
 # number of grid cells in the z dimension
 nz=10
 
