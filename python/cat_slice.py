@@ -127,10 +127,11 @@ def concat_slice(source_directory: pathlib.Path,
     # Loop through and copy datasets
     for dataset in datasets_to_copy:
       # Determine locations and shifts for writing
-      i0_start, i0_end, i1_start, i1_end = write_bounds(source_file, dataset)
+      i0_start, i0_end, i1_start, i1_end, file_in_slice = write_bounds(source_file, dataset)
 
-      # Copy the data
-      destination_file[dataset][i0_start:i0_end, i1_start:i1_end] = source_file[dataset]
+      if file_in_slice:
+        # Copy the data
+        destination_file[dataset][i0_start:i0_end, i1_start:i1_end] = source_file[dataset]
 
     # Now that the copy is done we close the source file
     source_file.close()
@@ -201,19 +202,23 @@ def write_bounds(source_file: h5py.File, dataset: str):
   Returns:
       tuple: The write bounds for the concatenated file to be used like `output_file[dataset][return[0]:return[1], return[2]:return[3]]
   """
+  nx, ny, nz                   = source_file.attrs['dims']
   nx_local, ny_local, nz_local = source_file.attrs['dims_local']
   x_start, y_start, z_start    = source_file.attrs['offset']
 
   if 'xy' in dataset:
+    file_in_slice = z_start < nz//2 < z_start+nz_local
     bounds = (x_start, x_start+nx_local, y_start, y_start+ny_local)
   elif 'yz' in dataset:
+    file_in_slice = x_start < nx//2 < x_start+nx_local
     bounds = (y_start, y_start+ny_local, z_start, z_start+nz_local)
   elif 'xz' in dataset:
+    file_in_slice = y_start < ny//2 < y_start+ny_local
     bounds = (x_start, x_start+nx_local, z_start, z_start+nz_local)
   else:
     raise ValueError(f'Dataset "{dataset}" is not a slice.')
 
-  return bounds
+  return bounds, file_in_slice
 # ==============================================================================
 
 if __name__ == '__main__':
