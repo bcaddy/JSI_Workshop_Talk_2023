@@ -80,7 +80,7 @@ def main():
 
     pre_video_idx = len(work_to_do)
     for field in fields:
-        video_task = dask.delayed(heatmap.make_video)(png_file_directory, video_file_directory, field, fps=1)
+        video_task = dask.delayed(heatmap.make_video)(png_file_directory, video_file_directory, field, fps=24)
 
         if args.cat_files or args.gen_images:
             video_task = dask.graph_manipulation.bind(video_task, work_to_do[:pre_video_idx])
