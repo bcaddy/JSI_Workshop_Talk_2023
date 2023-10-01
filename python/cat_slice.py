@@ -207,13 +207,13 @@ def write_bounds(source_file: h5py.File, dataset: str):
   x_start, y_start, z_start    = source_file.attrs['offset']
 
   if 'xy' in dataset:
-    file_in_slice = z_start < nz//2 < z_start+nz_local
+    file_in_slice = z_start <= nz//2 <= z_start+nz_local
     bounds = (x_start, x_start+nx_local, y_start, y_start+ny_local)
   elif 'yz' in dataset:
-    file_in_slice = x_start < nx//2 < x_start+nx_local
+    file_in_slice = x_start <= nx//2 <= x_start+nx_local
     bounds = (y_start, y_start+ny_local, z_start, z_start+nz_local)
   elif 'xz' in dataset:
-    file_in_slice = y_start < ny//2 < y_start+ny_local
+    file_in_slice = y_start <= ny//2 <= y_start+ny_local
     bounds = (x_start, x_start+nx_local, z_start, z_start+nz_local)
   else:
     raise ValueError(f'Dataset "{dataset}" is not a slice.')
