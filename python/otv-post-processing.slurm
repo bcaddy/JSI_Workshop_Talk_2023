@@ -2,14 +2,14 @@
 
 #SBATCH -A csc380
 #SBATCH -J Orszag_tang_small_scale
-#SBATCH -o /ccs/home/rcaddy/ast181-orion/scratch/rcaddy/JSI_Workshop_Talk_2023/data/otv_small_scale/%x-%j.out
+#SBATCH -o /lustre/orion/ast181/scratch/rcaddy/JSI_Workshop_Talk_2023/data/otv_small_scale/%x-%j.out
 #SBATCH -t 04:00:00
 #SBATCH -p batch
 #SBATCH -N 30
 #SBATCH --mail-user=r.caddy@pitt.edu
 #SBATCH --mail-type=ALL
 
-DASK_SCHEDULE_FILE=/ccs/home/rcaddy/ast181-orion/scratch/rcaddy/JSI_Workshop_Talk_2023/data/otv_small_scale/dask_schedule_file.json
+DASK_SCHEDULE_FILE=/lustre/orion/ast181/scratch/rcaddy/JSI_Workshop_Talk_2023/data/otv_small_scale/dask_schedule_file.json
 DASK_NUM_WORKERS=120
 
 srun --exclusive --ntasks=1 dask scheduler --interface ib0 --scheduler-file $DASK_SCHEDULE_FILE --no-dashboard --no-show &
