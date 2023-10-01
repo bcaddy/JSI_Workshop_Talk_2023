@@ -27,8 +27,8 @@ import heatmap
 def main():
     cli = argparse.ArgumentParser()
     # Required Arguments
-    cli.add_argument('-n', '--num-workers', type=int, default=6, help='The number of workers to use.')
     # Optional Arguments
+    cli.add_argument('-n', '--num-workers', type=int, default=8, help='The number of workers to use.')
     cli.add_argument('--cat-files',  type=bool, default=False, help='Concatenate the data files.')
     cli.add_argument('--gen-images', type=bool, default=False, help='Generate the images.')
     cli.add_argument('--gen-video',  type=bool, default=False, help='Convert the images to videos.')
@@ -39,12 +39,12 @@ def main():
     # dask.config.set(scheduler='single-threaded')
 
     # Work to do
-    outputs_to_work_on = [0, 1, 714]
+    outputs_to_work_on = np.arange(0, 8)
     num_ranks = 16
 
-    root_directory        = pathlib.Path.home() / 'Downloads' / 'small_otv_test_data'
+    root_directory        = pathlib.Path('/lustre/orion/ast181/scratch/rcaddy/JSI_Workshop_Talk_2023/data/otv_small_scale')
     source_directory      = root_directory / 'uncat_data'
-    concat_file_directory = root_directory / 'outdir'
+    concat_file_directory = root_directory / 'concat_data'
     png_file_directory    = root_directory / 'images' / 'png'
     pdf_file_directory    = root_directory / 'images' / 'pdf'
     video_file_directory  = root_directory / 'videos'
@@ -58,7 +58,7 @@ def main():
             work_to_do.append(dask.delayed(cat_slice.concat_slice)(source_directory=source_directory,
                                                                 destination_file_path=concat_file_directory / f'{output}_slice.h5',
                                                                 num_ranks=num_ranks,
-                                                                timestep_number=output,
+                                                                output_number=output,
                                                                 concat_yz=False,
                                                                 concat_xz=False,
                                                                 skip_fields=fields_to_skip,
@@ -88,7 +88,7 @@ def main():
             work_to_do.append(video_task)
 
     # Save the task graph
-    dask.visualize(*work_to_do, filename=str(pathlib.Path(__file__).resolve().parent/'dask-task-graph.pdf'))
+    dask.visualize(*work_to_do, filename=str(root_directory/'dask-task-graph.pdf'))
 
     # Execute the work
     dask.compute(*work_to_do)
