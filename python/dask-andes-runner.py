@@ -53,7 +53,10 @@ wait
 """
 
 import dask
+import dask.array as da
+import dask.dataframe as dd
 from dask.distributed import Client
+from dask import graph_manipulation
 import pathlib
 import argparse
 import numpy as np
@@ -79,7 +82,8 @@ def main():
     client = startup_dask(args.scheduler_file, args.num_workers)
 
     # Work to do
-    outputs_to_work_on = np.arange(1,715)
+    # outputs_to_work_on = np.arange(0,715)
+    outputs_to_work_on = np.arange(0,8)
     num_ranks = 16
 
     root_directory        = pathlib.Path('/lustre/orion/ast181/scratch/rcaddy/JSI_Workshop_Talk_2023/data/otv_small_scale')
