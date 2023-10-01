@@ -10,7 +10,7 @@
 #SBATCH --mail-type=ALL
 
 DASK_SCHEDULE_FILE=/lustre/orion/ast181/scratch/rcaddy/JSI_Workshop_Talk_2023/data/otv_small_scale/dask_schedule_file.json
-DASK_NUM_WORKERS=288
+DASK_NUM_WORKERS=$((SLURM_JOB_NUM_NODES*8))
 
 export PYTHONPATH="${PYTHONPATH}:/lustre/orion/ast181/scratch/rcaddy/JSI_Workshop_Talk_2023/python"
 

@@ -71,6 +71,7 @@ def main():
     # Required Arguments
     cli.add_argument('-N', '--num-workers',    type=int,          required=True, help='The number of workers to use')
     cli.add_argument('-s', '--scheduler-file', type=pathlib.Path, required=True, help='The path to the scheduler file')
+    cli.add_argument('-r', '--num-ranks',      type=int,          required=True, help='The number of ranks cholla was run with')
     # Optional Arguments
     cli.add_argument('--cat-files',  type=bool, default=False, help='Concatenate the data files.')
     cli.add_argument('--gen-images', type=bool, default=False, help='Generate the images.')
@@ -82,9 +83,8 @@ def main():
     client = startup_dask(args.scheduler_file, args.num_workers)
 
     # Work to do
-    # outputs_to_work_on = np.arange(0,715)
-    outputs_to_work_on = np.arange(0,8)
-    num_ranks = 16
+    outputs_to_work_on = np.arange(0,715)
+    num_ranks = args.num_ranks
 
     root_directory        = pathlib.Path('/lustre/orion/ast181/scratch/rcaddy/JSI_Workshop_Talk_2023/data/otv_small_scale')
     source_directory      = root_directory / 'uncat_data'
@@ -102,7 +102,7 @@ def main():
             work_to_do.append(dask.delayed(cat_slice.concat_slice)(source_directory=source_directory,
                                                                 destination_file_path=concat_file_directory / f'{output}_slice.h5',
                                                                 num_ranks=num_ranks,
-                                                                timestep_number=output,
+                                                                output_number=output,
                                                                 concat_yz=False,
                                                                 concat_xz=False,
                                                                 skip_fields=fields_to_skip,
@@ -132,7 +132,7 @@ def main():
             work_to_do.append(video_task)
 
     # Save the task graph
-    dask.visualize(*work_to_do, filename=str(pathlib.Path(__file__).resolve().parent/'dask-task-graph.pdf'))
+    dask.visualize(*work_to_do, filename=str(root_directory/'dask-task-graph.pdf'))
 
     # Execute the work
     dask.compute(*work_to_do)
