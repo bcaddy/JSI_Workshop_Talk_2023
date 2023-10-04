@@ -86,7 +86,7 @@ def main():
     outputs_to_work_on = np.arange(0,715)
     num_ranks = args.num_ranks
 
-    root_directory        = pathlib.Path('/lustre/orion/ast181/scratch/rcaddy/JSI_Workshop_Talk_2023/data/otv_small_scale')
+    root_directory        = pathlib.Path('/lustre/orion/ast181/scratch/rcaddy/JSI_Workshop_Talk_2023/data/otv_full_scale')
     source_directory      = root_directory / 'uncat_data'
     concat_file_directory = root_directory / 'concat_data'
     png_file_directory    = root_directory / 'images' / 'png'
@@ -132,10 +132,13 @@ def main():
             work_to_do.append(video_task)
 
     # Save the task graph
+    print('starting visualize')
     dask.visualize(*work_to_do, filename=str(root_directory/'dask-task-graph.pdf'))
 
     # Execute the work
+    print("starting compute")
     dask.compute(*work_to_do)
+    print(f'Task complete: As requested finished work on {args.cat_files = }, {args.gen_images = }, and {args.gen_video = }')
 
     # Shutdown the Dask cluster
     shutdown_dask(client)

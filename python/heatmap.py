@@ -30,7 +30,7 @@ matplotlib.rcParams['font.family'] = "sans-serif"
 matplotlib.rcParams['mathtext.fontset'] = 'cm'
 matplotlib.rcParams['mathtext.rm'] = 'serif'
 
-plt.rcParams['axes.labelsize']   = 15.0
+plt.rcParams['axes.labelsize']   = 25.0
 plt.rcParams['axes.titlesize']   = 35.0
 plt.rcParams['figure.titlesize'] = 35.0
 
@@ -103,8 +103,11 @@ def generate_figure(source_file_path, png_file_path, pdf_file_path, field, conto
         plt.contour(data, cmap='Greys', levels = levels, vmin=low_limit[field], vmax=high_limit[field])
         plt.gca().set_aspect('equal')
 
+    plt.xticks(np.linspace(0, data.shape[0], 7, dtype=int))
+    plt.yticks(np.linspace(0, data.shape[1], 7, dtype=int))
+
     # Plot Settings, Titles, etc
-    plt.title(f'Exascale Orszag-Tang Vortex: {pretty_names[field]}')
+    # plt.title(f'Exascale Orszag-Tang Vortex: {pretty_names[field]}')
     # plt.colorbar()
     # plt.xlabel(f'X-Direction Cells')
     # plt.ylabel(f'Y-Direction Cells')
