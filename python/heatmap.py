@@ -15,6 +15,7 @@ import h5py
 
 import os
 import pathlib
+import shutil
 
 matplotlib.use("Agg")
 plt.style.use('dark_background')
@@ -45,7 +46,7 @@ plt.rcParams['figure.titlesize'] = 35.0
 # print(IPython_default)
 
 # ======================================================================================================================
-def generate_figure(source_file_path, png_file_path, output_number, field, contour=False, zoom=False, pdf_file_path=None):
+def generate_figure(source_file_path, png_file_path, output_number, field, contour=False, zoom=False, pdf_file_path=None, fps=24):
     # Some settings needed for the plot
     pretty_names = {'d_xy'         : "Density",
                     'mx_xy'        : "Momentum $x$",
@@ -91,7 +92,7 @@ def generate_figure(source_file_path, png_file_path, output_number, field, conto
     while data.shape[0] > final_size:
 
         # subselect from the data
-        if zoom:
+        if zoom and zoom_frame>0:
             zoom_step = int(np.ceil(data.shape[0]*0.0075/2))
             data = data[zoom_step:-zoom_step, zoom_step:-zoom_step]
             start_idx += zoom_step
@@ -141,7 +142,13 @@ def generate_figure(source_file_path, png_file_path, output_number, field, conto
         # plt.tight_layout()
         image_name = f'{field}_{int(output_number+zoom_frame)}'
         plt.savefig(f'{png_file_path}/{image_name}.png', dpi=400)
-        # plt.savefig(f'{pdf_file_path}.pdf')
+
+        if zoom and zoom_frame == 0:
+            for i in range(4*fps):
+                zoom_frame += 1
+                copy_image_name = f'{field}_{int(output_number+zoom_frame)}'
+                shutil.copy(f'{png_file_path}/{image_name}.png', f'{png_file_path}/{copy_image_name}.png')
+
         plt.close()
 
         if not zoom:

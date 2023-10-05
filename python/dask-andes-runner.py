@@ -122,7 +122,8 @@ def main():
                                                                output,
                                                                field,
                                                                contour=False,
-                                                               zoom=zoom)
+                                                               zoom=zoom,
+                                                               fps=fps)
             if args.cat_files:
                 image_task = dask.graph_manipulation.bind(image_task, work_to_do[concat_idx])
             if args.gen_images:
