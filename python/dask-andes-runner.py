@@ -83,10 +83,11 @@ def main():
     client = startup_dask(args.scheduler_file, args.num_workers)
 
     # Work to do
-    outputs_to_work_on = np.arange(0,715)
+    num_outputs = 714
+    outputs_to_work_on = np.arange(0, num_outputs+1)
     num_ranks = args.num_ranks
 
-    root_directory        = pathlib.Path('/lustre/orion/ast181/scratch/rcaddy/JSI_Workshop_Talk_2023/data/otv_full_scale')
+    root_directory        = pathlib.Path('/lustre/orion/ast181/proj-shared/rcaddy/JSI_Workshop_Talk_2023/data/otv_full_scale')
     source_directory      = root_directory / 'uncat_data'
     concat_file_directory = root_directory / 'concat_data'
     png_file_directory    = root_directory / 'images' / 'png'
@@ -95,6 +96,8 @@ def main():
 
     fields_to_skip = ['mz_xy', 'magnetic_z_xy'] # These fields have no evolution
     fields         = ['d_xy','mx_xy','my_xy','E_xy','magnetic_x_xy','magnetic_y_xy']
+
+    fps = 24
 
     work_to_do = []
     for output in outputs_to_work_on:
@@ -111,12 +114,15 @@ def main():
         concat_idx = len(work_to_do)-1
 
         for field in fields:
-            image_name = f'{field}_{output}'
+            zoom = False
+            if output == num_outputs:
+                zoom = True
             image_task = dask.delayed(heatmap.generate_figure)(concat_file_directory / f'{output}_slice.h5',
-                                                               png_file_directory / image_name,
-                                                               pdf_file_directory / image_name,
+                                                               png_file_directory,
+                                                               output,
                                                                field,
-                                                               contour=False)
+                                                               contour=False,
+                                                               zoom=zoom)
             if args.cat_files:
                 image_task = dask.graph_manipulation.bind(image_task, work_to_do[concat_idx])
             if args.gen_images:
@@ -124,7 +130,7 @@ def main():
 
     pre_video_idx = len(work_to_do)
     for field in fields:
-        video_task = dask.delayed(heatmap.make_video)(png_file_directory, video_file_directory, field, fps=24)
+        video_task = dask.delayed(heatmap.make_video)(png_file_directory, video_file_directory, field, fps=fps)
 
         if args.cat_files or args.gen_images:
             video_task = dask.graph_manipulation.bind(video_task, work_to_do[:pre_video_idx])

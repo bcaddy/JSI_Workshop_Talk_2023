@@ -45,7 +45,7 @@ plt.rcParams['figure.titlesize'] = 35.0
 # print(IPython_default)
 
 # ======================================================================================================================
-def generate_figure(source_file_path, png_file_path, pdf_file_path, field, contour=False):
+def generate_figure(source_file_path, png_file_path, output_number, field, contour=False, zoom=False, pdf_file_path=None):
     # Some settings needed for the plot
     pretty_names = {'d_xy'         : "Density",
                     'mx_xy'        : "Momentum $x$",
@@ -72,8 +72,8 @@ def generate_figure(source_file_path, png_file_path, pdf_file_path, field, conto
                  'mx_xy'        : 'inferno',
                  'my_xy'        : 'inferno',
                  'E_xy'         : 'inferno',
-                 'magnetic_x_xy': 'inferno',
-                 'magnetic_y_xy': 'inferno'}
+                 'magnetic_x_xy': 'PuBu',
+                 'magnetic_y_xy': 'PuBu'}
 
     # Load the data
     with h5py.File(source_file_path, 'r') as data_file:
@@ -83,38 +83,71 @@ def generate_figure(source_file_path, png_file_path, pdf_file_path, field, conto
     # Rotate the data to make it look like the standard plots
     data = np.rot90(data)
 
-    # Plotting
-    plt.figure(figsize=(10,10))
+    # Loop for zooming
+    final_size  = 40
+    start_idx   = 0
+    end_idx     = data.shape[0]
+    zoom_frame  = 0
+    while data.shape[0] > final_size:
 
-    # Plot the main image
-    plt.imshow(data, cmap=color_map[field], interpolation = 'none', vmin=low_limit[field], vmax=high_limit[field], origin='lower')
+        # subselect from the data
+        if zoom:
+            zoom_step = int(np.ceil(data.shape[0]*0.0075/2))
+            data = data[zoom_step:-zoom_step, zoom_step:-zoom_step]
+            start_idx += zoom_step
+            end_idx   -= zoom_step
 
-    # If contour is turned on then overlay a contour plot
-    if contour:
-        if field == 'd_xy':
-            # The density field at t=0 is constant so the contour plot errors.
-            # Adding this tiny amount to the edge stops that error and isn't
-            # visible in the final plot
-            data[0,0] += 1E-15
+        # Plotting
+        plt.figure(figsize=(10,10))
 
-        # Create evenly spaced levels
-        levels = np.linspace(low_limit[field], high_limit[field], 30)
+        # Plot the main image
+        extent = []
+        extent.append(0) # x low limit
+        extent.append(data.shape[0]) # x high limit
+        extent.append(0) # y low limit
+        extent.append(data.shape[1]) # y high limit
+        plt.imshow(data, cmap=color_map[field],
+                   interpolation = 'none',
+                   extent=extent,
+                   vmin=low_limit[field],
+                   vmax=high_limit[field],
+                   origin='lower')
 
-        plt.contour(data, cmap='Greys', levels = levels, vmin=low_limit[field], vmax=high_limit[field])
-        plt.gca().set_aspect('equal')
+        # If contour is turned on then overlay a contour plot
+        if contour:
+            if field == 'd_xy':
+                # The density field at t=0 is constant so the contour plot errors.
+                # Adding this tiny amount to the edge stops that error and isn't
+                # visible in the final plot
+                data[0,0] += 1E-15
 
-    plt.xticks(np.linspace(0, data.shape[0], 7, dtype=int))
-    plt.yticks(np.linspace(0, data.shape[1], 7, dtype=int))
+            # Create evenly spaced levels
+            levels = np.linspace(low_limit[field], high_limit[field], 30)
 
-    # Plot Settings, Titles, etc
-    # plt.title(f'Exascale Orszag-Tang Vortex: {pretty_names[field]}')
-    # plt.colorbar()
-    # plt.xlabel(f'X-Direction Cells')
-    # plt.ylabel(f'Y-Direction Cells')
-    plt.tight_layout()
-    plt.savefig(f'{png_file_path}.png', dpi=400)
-    plt.savefig(f'{pdf_file_path}.pdf')
-    plt.close()
+            plt.contour(data, cmap='Greys', levels = levels, vmin=low_limit[field], vmax=high_limit[field])
+            plt.gca().set_aspect('equal')
+
+        num_ticks = 7
+        labels    = np.linspace(start_idx, end_idx, num_ticks, dtype=int)
+        locations = np.linspace(0, data.shape[0], num_ticks)
+        plt.xticks(ticks=locations, labels=labels)
+        plt.yticks(ticks=locations, labels=labels)
+
+        # Plot Settings, Titles, etc
+        # plt.title(f'Exascale Orszag-Tang Vortex: {pretty_names[field]}')
+        # plt.colorbar()
+        # plt.xlabel(f'X-Direction Cells')
+        # plt.ylabel(f'Y-Direction Cells')
+        # plt.tight_layout()
+        image_name = f'{field}_{int(output_number+zoom_frame)}'
+        plt.savefig(f'{png_file_path}/{image_name}.png', dpi=400)
+        # plt.savefig(f'{pdf_file_path}.pdf')
+        plt.close()
+
+        if not zoom:
+            break
+
+        zoom_frame += 1
 # ======================================================================================================================
 
 # ======================================================================================================================
