@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 import pathlib
 import matplotlib
+import matplotlib.ticker
 import matplotlib.pyplot as plt
 import shared_tools
 
@@ -47,21 +48,21 @@ def main():
                  xlims=x_limit,
                  skip_mpi=True)
 
-    Scaling_Plot(scaling_data=scaling_data,
-                 y_title=r'Milliseconds / 256$^3$ Cells / GPU',
-                 filename='ms_per_gpu',
-                 plot_func=ms_per_256_per_gpu,
-                 xlims=x_limit)
+#     Scaling_Plot(scaling_data=scaling_data,
+#                  y_title=r'Milliseconds / 256$^3$ Cells / GPU',
+#                  filename='ms_per_gpu',
+#                  plot_func=ms_per_256_per_gpu,
+#                  xlims=x_limit)
 
-    Scaling_Plot(scaling_data=scaling_data,
-                 y_title=r'Weak Scaling Efficiency',
-                 filename='weak_scaling_efficiency',
-                 plot_func=weak_scaling_efficiency,
-                 xlims=x_limit,
-                 skip_mpi=True,
-                 skip_integrator=True,
-                 legend=False)
-# ==============================================================================
+#     Scaling_Plot(scaling_data=scaling_data,
+#                  y_title=r'Weak Scaling Efficiency',
+#                  filename='weak_scaling_efficiency',
+#                  plot_func=weak_scaling_efficiency,
+#                  xlims=x_limit,
+#                  skip_mpi=True,
+#                  skip_integrator=True,
+#                  legend=False)
+# # ==============================================================================
 
 # ==============================================================================
 def load_data(data_path):
@@ -93,7 +94,7 @@ def load_data(data_path):
 # ==============================================================================
 def Scaling_Plot(scaling_data, y_title, filename, plot_func, xlims, ylims=None, skip_mpi=False, skip_integrator=False, legend=True):
     # Instantiate Plot
-    fig = plt.figure(0)
+    fig = plt.figure(0, figsize=(15, 10))
     fig.clf()
     ax = plt.gca()
 
@@ -101,7 +102,7 @@ def Scaling_Plot(scaling_data, y_title, filename, plot_func, xlims, ylims=None, 
     color_mhd       = 'blue'
     color_mpi       = 'red'
     color_total     = 'purple'
-    marker_size     = 5
+    marker_size     = 10
 
     # Plot the data
     ax = plot_func(scaling_data, 'Total', color_total, 'Total', ax, marker_size)
@@ -111,30 +112,51 @@ def Scaling_Plot(scaling_data, y_title, filename, plot_func, xlims, ylims=None, 
     if (not skip_mpi):
         ax = plot_func(scaling_data, 'Boundaries', color_mpi, 'MPI Communication', ax, marker_size, delete_first=True)
 
+    # Set CPU region
+    num_procs = scaling_data.loc['n_proc'].to_numpy()
+    ax.text(1.04E2, 5.5E5,
+            '   Typical CPU Code\nCells / Second / CPU',
+            fontsize=20,
+            alpha=0.5)
+    ax.fill_between(x=[num_procs.min(), num_procs.max()], y1=[1E5, 1E5], y2=[5E6,5E6],
+                    color='cyan',
+                    alpha=0.2)
+
     # Setup the rest of the plot
-    ax.tick_params(axis='both', which='major', direction='in' )
-    ax.tick_params(axis='both', which='minor', direction='in' )
-
     ax.set_xlim(xlims[0], xlims[1])
-    # ax.set_ylim(ylims[0], ylims[1])
+    ax.set_ylim(ymin = 1, ymax=1E9)
 
-    # ax.set_yscale('log')
+    ax.set_yscale('log')
     ax.set_xscale('log')
 
-    plt.grid(color='0.25')
+    locmaj = matplotlib.ticker.LogLocator(base=10.0,
+                                          subs=(1.0, ),
+                                          numticks=100)
+    ax.yaxis.set_major_locator(locmaj)
 
-    title_size      = 22
-    axis_label_size = 17
+    locmin = matplotlib.ticker.LogLocator(base=10.0,
+                                          subs=np.arange(2, 10) * .1,
+                                          numticks=100)
+    ax.yaxis.set_minor_locator(locmin)
+    ax.tick_params(which='both', direction='in', labelsize=20, bottom=True, top=True, left=True, right=True)
+
+    plt.grid(axis='x', color='0.5', which='major')
+    plt.grid(axis='y', color='0.5', which='major')
+    # plt.grid(axis='y', color='0.25', which='minor')
+
+
+    title_size      = 40
+    axis_label_size = 25
     fig.suptitle('MHD Weak Scaling on Frontier (PLMC)', fontsize=title_size)
     ax.set_ylabel(y_title, fontsize=axis_label_size)
     ax.set_xlabel(r'Number of GPUs', fontsize=axis_label_size)
 
     if legend:
-        legend = ax.legend()
+        legend = ax.legend(fontsize=15)
     fig.tight_layout()
 
     output_path = shared_tools.repo_root / 'assets' / f'scaling_tests_{filename}.pdf'
-    fig.savefig(output_path)
+    fig.savefig(output_path, dpi=400)
 # ==============================================================================
 
 # ==============================================================================
