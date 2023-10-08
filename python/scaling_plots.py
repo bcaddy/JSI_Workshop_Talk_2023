@@ -114,11 +114,13 @@ def Scaling_Plot(scaling_data, y_title, filename, plot_func, xlims, ylims=None, 
 
     # Set CPU region
     num_procs = scaling_data.loc['n_proc'].to_numpy()
-    ax.text(1.04E2, 5.5E5,
+    ax.text(1.02E2, 2E6,
             '   Typical CPU Code\nCells / Second / CPU',
             fontsize=20,
             alpha=0.5)
-    ax.fill_between(x=[num_procs.min(), num_procs.max()], y1=[1E5, 1E5], y2=[5E6,5E6],
+    athenaPP_per_cpu = 20 * 1E6
+    cpu_high_lim = 2. * athenaPP_per_cpu
+    ax.fill_between(x=[num_procs.min(), num_procs.max()], y1=[1E6, 1E6], y2=[cpu_high_lim, cpu_high_lim],
                     color='cyan',
                     alpha=0.2)
 
