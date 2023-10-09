@@ -126,7 +126,7 @@ def Scaling_Plot(scaling_data, y_title, filename, plot_func, xlims, ylims=None, 
 
     # Setup the rest of the plot
     ax.set_xlim(xlims[0], xlims[1])
-    ax.set_ylim(ymin = 1, ymax=1E9)
+    ax.set_ylim(ymin = 1E5, ymax=1E9)
 
     ax.set_yscale('log')
     ax.set_xscale('log')
