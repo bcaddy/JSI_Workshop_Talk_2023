@@ -35,7 +35,7 @@ plt.close('all')
 
 # ==============================================================================
 def main():
-    data_path = shared_tools.repo_root / 'scaling-tests' / 'data' / '2023-08-24-plmc'
+    data_path = shared_tools.repo_root / 'scaling-tests' / 'data' / '2023-09-20-high-res-plmc-identify-bad-ranks'
 
     scaling_data = load_data(data_path)
 
@@ -73,7 +73,7 @@ def load_data(data_path):
     file_name = data_dirs[0] / 'run_timing.log'
     with open(file_name, 'r') as file:
         lines        = file.readlines()
-        header       = lines[3][1:].split()
+        header       = lines[5][1:].split()
         scaling_data = pd.DataFrame(index=header)
 
     # Loop through the directories and load the data
@@ -82,7 +82,7 @@ def load_data(data_path):
         if file_name.is_file():
             with open(file_name, 'r') as file:
                 lines  = file.readlines()
-                data   = lines[4].split()
+                data   = lines[6].split()
                 scaling_data[int(data[0])] = pd.to_numeric(data)
         else:
             print(f'File: {file_name} not found.')
