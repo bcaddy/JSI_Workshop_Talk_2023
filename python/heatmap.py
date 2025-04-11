@@ -6,9 +6,16 @@
  Functions for generating Orszag-Tang Vortex plots and videos
 ================================================================================
 """
-
+"""
+TODO:
+    - [x] videos of the 6 fields that 4,320 pixels high
+    - [x] Label in corner with the name of the field
+    - [x] images should fill field, axis in inside
+    - [] different color maps for each field
+"""
 import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.transforms
 
 import numpy as np
 import h5py
@@ -50,11 +57,11 @@ def generate_figure(source_file_path, png_file_path, output_number, field, conto
     zoom=False
     # Some settings needed for the plot
     pretty_names = {'d_xy'         : "Density",
-                    'mx_xy'        : "Momentum $x$",
-                    'my_xy'        : "Momentum $y$",
+                    'mx_xy'        : "Momentum $X$",
+                    'my_xy'        : "Momentum $Y$",
                     'E_xy'         : "Energy",
-                    'magnetic_x_xy': "$B_x$",
-                    'magnetic_y_xy': "$B_y$"}
+                    'magnetic_x_xy': "Magnetic Field $X$",
+                    'magnetic_y_xy': "Magnetic Field $Y$"}
 
     low_limit =  {'d_xy'         :  0.00,
                   'mx_xy'        : -0.34,
@@ -101,7 +108,7 @@ def generate_figure(source_file_path, png_file_path, output_number, field, conto
 
         # Plotting
         plt.close('all')
-        plt.figure(figsize=(10,10))
+        fig = plt.figure(figsize=(10,10))
 
         # Plot the main image
         extent = []
@@ -134,15 +141,27 @@ def generate_figure(source_file_path, png_file_path, output_number, field, conto
         num_ticks = 7
         labels    = np.linspace(start_idx, end_idx, num_ticks, dtype=int)
         locations = np.linspace(0, data.shape[0], num_ticks)
-        plt.xticks(ticks=locations, labels=labels)
-        plt.yticks(ticks=locations, labels=labels)
+        plt.tick_params(axis="y", direction="in", pad=-28)
+        plt.tick_params(axis="x", direction="in", pad=-30)
+        plt.xticks(ticks=locations[1:], labels=labels[1:], rotation=-45, ha="right")
+        plt.yticks(ticks=locations[1:], labels=labels[1:], rotation=-45, ha="right")
+
+        # apply offset transform to all x ticklabels.
+        offset = matplotlib.transforms.ScaledTranslation(-0.05, 0.0, fig.dpi_scale_trans)
+        label = plt.gca().xaxis.get_majorticklabels()[-1]
+        label.set_transform(label.get_transform() + offset)
+
+        offset = matplotlib.transforms.ScaledTranslation(0.0, -0.08, fig.dpi_scale_trans)
+        label = plt.gca().yaxis.get_majorticklabels()[-1]
+        label.set_transform(label.get_transform() + offset)
 
         # Plot Settings, Titles, etc
+        plt.text(2700, 2650, f"{pretty_names[field]}", size=20, ha='right')
         # plt.title(f'Exascale Orszag-Tang Vortex: {pretty_names[field]}')
         # plt.colorbar()
         # plt.xlabel(f'X-Direction Cells')
         # plt.ylabel(f'Y-Direction Cells')
-        # plt.tight_layout()
+        plt.tight_layout(pad=0.0)
         image_name = f'{field}_{int(output_number+zoom_frame)}'
         plt.savefig(f'{png_file_path}/{image_name}.svg')
 
@@ -165,7 +184,8 @@ def make_video(image_directory, video_directory, field, fps=24):
     # Convert the images to animations
 
     # 1080p is 1080, 2k is 1440, 4k is 2160
-    resolution_height = 2160
+    # CURV display is 4,320 high and 19,200 wide
+    resolution_height = 4320
 
     command = f"echo 'Y' | ffmpeg -r {fps} -i '{image_directory}/{field}_%d.png' -vf scale={resolution_height}:-2,setsar=1:1 -pix_fmt yuv420p {video_directory}/{field}.mp4 >/dev/null 2>&1"
 
