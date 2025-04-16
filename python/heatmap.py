@@ -16,6 +16,7 @@ TODO:
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.transforms
+import cmasher as cmr
 
 import numpy as np
 import h5py
@@ -54,7 +55,6 @@ plt.rcParams['figure.titlesize'] = 35.0
 
 # ======================================================================================================================
 def generate_figure(source_file_path, png_file_path, output_number, field, contour=False, zoom=False, pdf_file_path=None, fps=24):
-    zoom=False
     # Some settings needed for the plot
     pretty_names = {'d_xy'         : "Density",
                     'mx_xy'        : "Momentum $X$",
@@ -78,11 +78,12 @@ def generate_figure(source_file_path, png_file_path, output_number, field, conto
                   'magnetic_y_xy': 0.70}
 
     color_map = {'d_xy'         : 'inferno',
-                 'mx_xy'        : 'inferno',
-                 'my_xy'        : 'inferno',
-                 'E_xy'         : 'inferno',
-                 'magnetic_x_xy': 'PuBu',
-                 'magnetic_y_xy': 'PuBu'}
+                 'mx_xy'        : 'cmr.jungle',
+                 'my_xy'        : 'cmr.cosmic',
+                 'E_xy'         : 'cmr.amber',
+                 'magnetic_x_xy': 'cmr.rainforest',
+                 'magnetic_y_xy': 'cmr.flamingo'}
+
 
     # Load the data
     with h5py.File(source_file_path, 'r') as data_file:
@@ -91,6 +92,9 @@ def generate_figure(source_file_path, png_file_path, output_number, field, conto
 
     # Rotate the data to make it look like the standard plots
     data = np.rot90(data)
+
+    fig_size = 10
+    dpi = np.ceil(data.shape[0] / fig_size)
 
     # Loop for zooming
     final_size  = 40
@@ -106,23 +110,24 @@ def generate_figure(source_file_path, png_file_path, output_number, field, conto
             start_idx += zoom_step
             end_idx   -= zoom_step
 
-        # Plotting
-        plt.close('all')
-        fig = plt.figure(figsize=(10,10))
-
         # Plot the main image
         extent = []
         extent.append(0) # x low limit
         extent.append(data.shape[0]) # x high limit
         extent.append(0) # y low limit
         extent.append(data.shape[1]) # y high limit
+
+        # Plotting
+        plt.close('all')
+        fig = plt.figure(figsize=(fig_size,fig_size))
+
         plt.imshow(data,
-                   cmap=color_map[field],
-                   interpolation = 'none',
-                   extent=extent,
-                   vmin=low_limit[field],
-                   vmax=high_limit[field],
-                   origin='lower')
+                cmap=plt.get_cmap(color_map[field]),
+                interpolation = 'none',
+                extent=extent,
+                vmin=low_limit[field],
+                vmax=high_limit[field],
+                origin='lower')
 
         # If contour is turned on then overlay a contour plot
         if contour:
@@ -156,22 +161,20 @@ def generate_figure(source_file_path, png_file_path, output_number, field, conto
         label.set_transform(label.get_transform() + offset)
 
         # Plot Settings, Titles, etc
-        plt.text(2700, 2650, f"{pretty_names[field]}", size=20, ha='right')
+        plt.text(data.shape[0]*0.98, data.shape[0]*0.95, f"{pretty_names[field]}", size=20, ha='right')
         # plt.title(f'Exascale Orszag-Tang Vortex: {pretty_names[field]}')
         # plt.colorbar()
         # plt.xlabel(f'X-Direction Cells')
         # plt.ylabel(f'Y-Direction Cells')
         plt.tight_layout(pad=0.0)
         image_name = f'{field}_{int(output_number+zoom_frame)}'
-        plt.savefig(f'{png_file_path}/{image_name}.svg')
+        plt.savefig(f'{png_file_path}/{image_name}.png', dpi=dpi)
 
         if zoom and zoom_frame == 0:
             for i in range(4*fps):
                 zoom_frame += 1
                 copy_image_name = f'{field}_{int(output_number+zoom_frame)}'
                 shutil.copy(f'{png_file_path}/{image_name}.png', f'{png_file_path}/{copy_image_name}.png')
-
-        plt.close()
 
         if not zoom:
             break

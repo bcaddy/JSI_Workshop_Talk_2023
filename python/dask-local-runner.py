@@ -49,7 +49,7 @@ def main():
     root_directory        = pathlib.Path('/Users/bc9754/Scratch/orszag_tang_vortex/otv_small_2754x2754')
     source_directory      = root_directory / 'uncat_data'
     concat_file_directory = root_directory / 'data'
-    image_file_directory  = root_directory / 'svgs'
+    image_file_directory  = root_directory / 'images'
     video_file_directory  = root_directory / 'videos'
 
     fields_to_skip = ['mz_xy', 'magnetic_z_xy'] # These fields have no evolution
@@ -58,7 +58,7 @@ def main():
     fps = 24
 
     work_to_do = []
-    for output in [714]:#outputs_to_work_on:
+    for output in outputs_to_work_on:
         if args.cat_files:
             work_to_do.append(dask.delayed(cat_slice.concat_slice)(source_directory=source_directory,
                                                                 destination_file_path=concat_file_directory / f'{output}_slice.h5',
@@ -68,7 +68,7 @@ def main():
                                                                 concat_xz=False,
                                                                 skip_fields=fields_to_skip,
                                                                 destination_dtype=np.float32))
-    
+
         concat_idx = len(work_to_do)-1
 
         for field in fields:
