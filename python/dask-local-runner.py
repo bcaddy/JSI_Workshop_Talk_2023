@@ -75,7 +75,7 @@ def main():
             zoom = False
             if output == num_outputs:
                 zoom = True
-            image_task = dask.delayed(heatmap.generate_figure)(concat_file_directory / f'{output}_slice.h5',
+            image_task = dask.delayed(heatmap.generate_figure, pure=True)(concat_file_directory / f'{output}_slice.h5',
                                                                image_file_directory,
                                                                output,
                                                                field,
